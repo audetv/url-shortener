@@ -6,7 +6,6 @@ run:
   skip-dirs-use-default: true
 
 linters:
-  disable-all: true
   enable:
     - gofmt
     - goimports
