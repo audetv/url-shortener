@@ -1,5 +1,5 @@
 run:
-  concurrency: 2
+  concurrency: 4
   timeout: 1m
   issues-exit-code: 1
   tests: false
@@ -10,12 +10,21 @@ linters:
     - gofmt
     - goimports
     - govet
+    - gochecknoglobals # проверяет что не используются глобальные переменные.
     - goconst
+    - staticcheck
     - funlen
     - bodyclose
     - errcheck
-    - deadcode
-    - exportloopref
+    - deadcode # проверяет неиспользуемые типы или функции
+    - exportloopref # находит захват переменной range цикла по ссылке
+    - unconvert # проверяет что вы не делайте лишние конверсии
+    - varcheck # проверяет неиспользуемые переменные
+    - unused # проверяет неиспользуемые поля структур
+    - unparam # сообщает когда аргументы функции не используются в самом теле функции.
+    - ineffassign # сообщает когда изменение переменой не используются дальше в коде
+    - errcheck # находит места где забыли проверку ошибок
+    - gocritic
 
 linters-settings:
   goimports:
