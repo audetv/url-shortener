@@ -15,7 +15,7 @@ func New() *ShortUrl {
 }
 
 func Parse(s string) *ShortUrl {
-	// здесь можно сделать проверку, что в строке содержаться символы из letterBytes
+	// TODO здесь можно сделать проверку, что в строке содержаться символы из letterBytes
 	return (*ShortUrl)(&s)
 }
 

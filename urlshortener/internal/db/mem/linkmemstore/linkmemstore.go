@@ -2,7 +2,9 @@ package linkmemstore
 
 import (
 	"context"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/app/repos/link"
 	"github.com/audetv/url-shortener/urlshortener/internal/app/shorturl"
@@ -33,4 +35,36 @@ func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, e
 
 	ls.m[l.Short] = l
 	return &l.Short, nil
+}
+
+func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, error) {
+	ls.Lock()
+	defer ls.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+
+	}
+
+	chout := make(chan link.Link, 100)
+
+	go func() {
+		defer close(chout)
+		ls.Lock()
+		defer ls.Unlock()
+		for _, l := range ls.m {
+			if strings.Contains(l.Origin, s) {
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(2 * time.Second):
+
+				case chout <- l:
+				}
+			}
+		}
+	}()
+	return chout, nil
 }

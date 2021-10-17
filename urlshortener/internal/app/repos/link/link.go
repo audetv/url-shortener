@@ -24,9 +24,9 @@ type Stats struct {
 
 type LinkStoreInterface interface {
 	Create(ctx context.Context, l Link) (*shorturl.ShortUrl, error)
+	SearchLinks(ctx context.Context, su string) (chan Link, error)
 	// Read(ctx context.Context, su shorturl.ShortUrl) (*Link, error)
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
-	// SearchLinks(ctx context.Context, su string) (chan Link, error)
 	// GetStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
 	// CreateStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
 	// IncRedirectCount(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
@@ -50,4 +50,28 @@ func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	}
 	l.Short = *short
 	return &l, nil
+}
+
+func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
+	chin, err := ls.linkStore.SearchLinks(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
+	chout := make(chan Link, 100)
+	go func() {
+		defer close(chout)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case l, ok := <-chin:
+				if !ok {
+					return
+				}
+				chout <- l
+			}
+		}
+	}()
+	return chout, err
 }
