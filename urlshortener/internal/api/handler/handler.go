@@ -19,6 +19,7 @@ func NewRouter(links *link.Links) *Router {
 		links:    links,
 	}
 	r.HandleFunc("/create", r.AuthMiddleware(http.HandlerFunc(r.CreateLink)).ServeHTTP)
+	r.HandleFunc("/search", r.AuthMiddleware(http.HandlerFunc(r.SearchLinks)).ServeHTTP)
 	return r
 }
 
