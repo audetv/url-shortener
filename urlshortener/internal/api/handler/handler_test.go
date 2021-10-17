@@ -11,10 +11,15 @@ import (
 	"testing"
 )
 
-func TestRouter_CreateLink(t *testing.T) {
+func BuildRouter() *Router {
 	linkStore := linkmemstore.NewLinks()
 	links := link.NewLinks(linkStore)
 	router := NewRouter(links)
+	return router
+}
+
+func TestRouter_CreateLink(t *testing.T) {
+	router := BuildRouter()
 	handler := router.AuthMiddleware(http.HandlerFunc(router.CreateLink)).ServeHTTP
 
 	testUrl := "https://test.loc"
@@ -45,5 +50,19 @@ func TestRouter_CreateLink(t *testing.T) {
 
 	if testLink.Origin != testUrl {
 		t.Errorf("Handler returned unexpected orign url: got %v expect %v", testLink.Origin, testUrl)
+	}
+}
+
+func TestRouter_SearchLinks(t *testing.T) {
+	router := BuildRouter()
+	handler := router.AuthMiddleware(http.HandlerFunc(router.SearchLinks)).ServeHTTP
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/search?q=test", nil)
+	r.SetBasicAuth("admin", "admin")
+	handler(w, r)
+
+	if statusCode := w.Code; statusCode != http.StatusOK {
+		t.Errorf("Want status '%d', got '%d'", http.StatusOK, w.Code)
 	}
 }
