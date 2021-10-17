@@ -2,6 +2,7 @@ package linkmemstore
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"sync"
 	"time"
@@ -35,6 +36,45 @@ func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, e
 
 	ls.m[l.Short] = l
 	return &l.Short, nil
+}
+
+func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
+	ls.Lock()
+	defer ls.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+
+	}
+	l, ok := ls.m[short]
+	if ok {
+		return &l, nil
+	}
+
+	return nil, sql.ErrNoRows
+}
+
+func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
+	ls.Lock()
+	defer ls.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+
+	}
+
+	l, ok := ls.m[short]
+	if ok {
+		l.RedirectCount += 1
+		ls.m[short] = l
+		return &l, nil
+	}
+
+	return nil, sql.ErrNoRows
 }
 
 func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, error) {

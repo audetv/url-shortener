@@ -23,13 +23,15 @@ type Stats struct {
 }
 
 type LinkStoreInterface interface {
-	Create(ctx context.Context, l Link) (*shorturl.ShortUrl, error)
-	SearchLinks(ctx context.Context, su string) (chan Link, error)
-	// Read(ctx context.Context, su shorturl.ShortUrl) (*Link, error)
+	Create(ctx context.Context, link Link) (*shorturl.ShortUrl, error)
+	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
+	SearchLinks(ctx context.Context, short string) (chan Link, error)
+	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
+	// GetRedirectUrl(ctx context.Context, su shorturl.ShortUrl) (*Link, error)
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
 	// GetStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
 	// CreateStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
-	// IncRedirectCount(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
+
 }
 
 type Links struct {
@@ -50,6 +52,22 @@ func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	}
 	l.Short = *short
 	return &l, nil
+}
+
+func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {
+	link, err := ls.linkStore.Read(ctx, short)
+	if err != nil {
+		return nil, fmt.Errorf("read link error %w", err)
+	}
+	return link, err
+}
+
+func (ls *Links) DoRedirect(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {
+	link, err := ls.linkStore.IncRedirectCount(ctx, short)
+	if err != nil {
+		return nil, fmt.Errorf("read link error %w", err)
+	}
+	return link, err
 }
 
 func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {

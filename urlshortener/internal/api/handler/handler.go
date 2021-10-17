@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/app/repos/link"
@@ -20,6 +21,7 @@ func NewRouter(links *link.Links) *Router {
 		links:    links,
 	}
 	r.HandleFunc("/create", r.AuthMiddleware(http.HandlerFunc(r.CreateLink)).ServeHTTP)
+	r.HandleFunc("/redirect", http.HandlerFunc(r.Redirect).ServeHTTP)
 	r.HandleFunc("/search", r.AuthMiddleware(http.HandlerFunc(r.SearchLinks)).ServeHTTP)
 	return r
 }
@@ -37,8 +39,9 @@ func (rt *Router) AuthMiddleware(next http.Handler) http.Handler {
 }
 
 type Link struct {
-	Short  shorturl.ShortUrl `json:"short"`
-	Origin string            `json:"origin"`
+	Short         shorturl.ShortUrl `json:"short"`
+	Origin        string            `json:"origin"`
+	RedirectCount int               `json:"redirect_count"`
 }
 
 func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
@@ -80,6 +83,25 @@ func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (rt *Router) Redirect(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	s := r.URL.Query().Get("s")
+	short := shorturl.Parse(s)
+
+	l, err := rt.links.DoRedirect(r.Context(), *short)
+	log.Printf("link %v", l)
+	if err != nil {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, l.Origin, http.StatusSeeOther)
+
+}
+
 // SearchLinks /search?q='' список всех ссылок, или фильтр ссылок по origin url
 func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -115,8 +137,9 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 			}
 			_ = enc.Encode(
 				Link{
-					Short:  l.Short,
-					Origin: l.Origin,
+					Short:         l.Short,
+					Origin:        l.Origin,
+					RedirectCount: l.RedirectCount,
 				},
 			)
 			w.(http.Flusher).Flush()
