@@ -27,10 +27,7 @@ type LinkStoreInterface interface {
 	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
 	SearchLinks(ctx context.Context, short string) (chan Link, error)
 	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
-	// GetRedirectUrl(ctx context.Context, su shorturl.ShortUrl) (*Link, error)
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
-	// GetStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
-	// CreateStats(ctx context.Context, su shorturl.ShortUrl) (*Stats, error)
 
 }
 
