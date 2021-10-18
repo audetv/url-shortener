@@ -13,20 +13,22 @@ type Link struct {
 	Origin        string
 	RedirectCount int
 	CreatedAt     time.Time
+	Log           []Stats
 }
 
 type Stats struct {
-	Short     shorturl.ShortUrl
-	Referrer  string
+	Referer   string
 	Location  string
 	CreatedAt time.Time
 }
 
 type LinkStoreInterface interface {
-	Create(ctx context.Context, link Link) (*shorturl.ShortUrl, error)
-	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
+	CreateLink(ctx context.Context, link Link) (*shorturl.ShortUrl, error)
+	ReadLink(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
 	SearchLinks(ctx context.Context, short string) (chan Link, error)
 	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
+	// AddStats(ctx context.Context, short shorturl.ShortUrl, stats Stats) error
+	// GetStats(ctx context.Context, short shorturl.ShortUrl) (chan Stats, error)
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
 
 }
@@ -41,9 +43,18 @@ func NewLinks(linkStore LinkStoreInterface) *Links {
 	}
 }
 
+func (ls *Links) DoRedirect(ctx context.Context, short shorturl.ShortUrl, stats Stats) (*Link, error) {
+	link, err := ls.linkStore.IncRedirectCount(ctx, short)
+	if err != nil {
+		return nil, fmt.Errorf("read link error %w", err)
+	}
+	return link, err
+}
+
 func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	l.Short = *shorturl.New()
-	short, err := ls.linkStore.Create(ctx, l)
+	l.CreatedAt = time.Now()
+	short, err := ls.linkStore.CreateLink(ctx, l)
 	if err != nil {
 		return nil, fmt.Errorf("create link error: %w", err)
 	}
@@ -52,15 +63,7 @@ func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 }
 
 func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {
-	link, err := ls.linkStore.Read(ctx, short)
-	if err != nil {
-		return nil, fmt.Errorf("read link error %w", err)
-	}
-	return link, err
-}
-
-func (ls *Links) DoRedirect(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {
-	link, err := ls.linkStore.IncRedirectCount(ctx, short)
+	link, err := ls.linkStore.ReadLink(ctx, short)
 	if err != nil {
 		return nil, fmt.Errorf("read link error %w", err)
 	}

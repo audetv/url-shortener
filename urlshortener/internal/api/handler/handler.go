@@ -23,6 +23,7 @@ func NewRouter(links *link.Links) *Router {
 	r.HandleFunc("/create", r.AuthMiddleware(http.HandlerFunc(r.CreateLink)).ServeHTTP)
 	r.HandleFunc("/redirect", http.HandlerFunc(r.Redirect).ServeHTTP)
 	r.HandleFunc("/search", r.AuthMiddleware(http.HandlerFunc(r.SearchLinks)).ServeHTTP)
+	r.HandleFunc("/stats", r.AuthMiddleware(http.HandlerFunc(r.Stats)).ServeHTTP)
 	return r
 }
 
@@ -42,6 +43,11 @@ type Link struct {
 	Short         shorturl.ShortUrl `json:"short"`
 	Origin        string            `json:"origin"`
 	RedirectCount int               `json:"redirect_count"`
+}
+
+type Stats struct {
+	Short   shorturl.ShortUrl `json:"short"`
+	Referer string            `json:"referer"`
 }
 
 func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +98,11 @@ func (rt *Router) Redirect(w http.ResponseWriter, r *http.Request) {
 	s := r.URL.Query().Get("s")
 	short := shorturl.Parse(s)
 
-	l, err := rt.links.DoRedirect(r.Context(), *short)
+	stats := link.Stats{
+		Referer: r.Referer(),
+	}
+
+	l, err := rt.links.DoRedirect(r.Context(), *short, stats)
 	log.Printf("link %v", l)
 	if err != nil {
 		http.Error(w, "404 not found", http.StatusNotFound)
@@ -144,5 +154,26 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 			)
 			w.(http.Flusher).Flush()
 		}
+	}
+}
+
+type LinkWithStats struct {
+	Link Link
+	Log  []Stats
+}
+
+func (rt *Router) Stats(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	s := r.URL.Query().Get("s")
+	short := shorturl.Parse(s)
+
+	_, err := rt.links.Read(r.Context(), *short)
+	if err != nil {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
 	}
 }
