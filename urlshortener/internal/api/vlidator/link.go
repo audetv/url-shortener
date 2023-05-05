@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ValidLink - check that the link we're creating a shortlink for is a absolute URL path
+// ValidLink - check that the link we're creating a shortlink for is an absolute URL path
 func ValidLink(link string) error {
 	r := regexp.MustCompile("^(http|https)://")
 
