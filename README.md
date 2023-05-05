@@ -48,6 +48,8 @@ Models: link, stats
 2. Решить нужен ли логин для просмотра статистики, админка.
 3. Для просмотр списка всех ссылок. решить нужен ли фильтр по исходному url ссылки. Фильтр можно вынести на фронтенд.
 
+https://golangci-lint.run/usage/install/#local-installation
+
 Changelog:
 1. Golangci lint is enabled
 2. Pre-commit is installed and the git hook scripts are configured 
