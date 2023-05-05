@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/api/vlidator"
-
 	"github.com/audetv/url-shortener/urlshortener/internal/app/repos/link"
 	"github.com/audetv/url-shortener/urlshortener/internal/app/shorturl"
 )
