@@ -1,5 +1,5 @@
 # 1
-FROM golang:latest AS build
+FROM golang:latest AS builder
 
 WORKDIR /app
 
@@ -17,9 +17,9 @@ FROM scratch
 
 WORKDIR /app
 
-COPY --from=build /app/main /app/main
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /app/main /app/main
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 ENV TZ=Europe/Moscow
 
 EXPOSE 8000
