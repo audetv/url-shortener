@@ -12,7 +12,7 @@ services:
       - url-shortener-net
 
   postgres:
-    image: postgres:14
+    image: postgres:15.1-alpine
     restart: always
     ports:
       - "54325:5432"
