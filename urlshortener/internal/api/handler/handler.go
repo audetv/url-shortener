@@ -70,7 +70,7 @@ func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO Сделать проверку, что урл валидный
+	// Проверяем, что ссылка правильная
 	err := vlidator.ValidLink(l.Origin)
 	if err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
@@ -107,7 +107,13 @@ func (rt *Router) Redirect(w http.ResponseWriter, r *http.Request) {
 	s := r.URL.Query().Get("s")
 	short := shorturl.Parse(s)
 
-	l, err := rt.links.DoRedirect(r.Context(), *short)
+	_, err := rt.links.DoRedirect(r.Context(), *short)
+	if err != nil {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	l, err := rt.links.Read(r.Context(), *short)
 	log.Printf("link %v", l)
 	if err != nil {
 		http.Error(w, "404 not found", http.StatusNotFound)

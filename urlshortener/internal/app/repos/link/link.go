@@ -12,7 +12,6 @@ type Link struct {
 	Short         shorturl.ShortUrl
 	Origin        string
 	RedirectCount int
-	CreatedAt     time.Time
 }
 
 type Stats struct {
