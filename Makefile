@@ -9,16 +9,14 @@ docker-build:
 		--target builder \
 		--cache-from ${REGISTRY}/url-shortener:cache-builder \
 		--tag ${REGISTRY}/url-shortener:cache-builder \
-		--file ./Dockerfile app
+		--file ./Dockerfile .
 
 	DOCKER_BUILDKIT=1 docker --log-level=debug build --pull --build-arg BUILDKIT_INLINE_CACHE=1 \
     	--cache-from ${REGISTRY}/url-shortener:cache-builder \
     	--cache-from ${REGISTRY}/url-shortener:cache \
     	--tag ${REGISTRY}/url-shortener:cache \
     	--tag ${REGISTRY}/url-shortener:${IMAGE_TAG} \
-    	--file ./Dockerfile app
-
-	docker --log-level=debug build --pull --file=./Dockerfile --tag=${REGISTRY}/url-shortener:${IMAGE_TAG} .
+    	--file ./Dockerfile .
 
 push-build-cache:
 	docker push ${REGISTRY}/url-shortener:cache-builder
