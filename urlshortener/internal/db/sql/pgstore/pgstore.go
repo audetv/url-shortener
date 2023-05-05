@@ -108,11 +108,14 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 	}, nil
 }
 
-func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
-	_, err := ls.db.ExecContext(ctx, `UPDATE links SET redirect_count = redirect_count + 1, updated_at = $1 WHERE short = $2`,
-		time.Now(), short,
+func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error {
+	_, err := ls.db.ExecContext(
+		ctx,
+		`UPDATE links SET redirect_count = redirect_count + 1, updated_at = $1 WHERE short = $2`,
+		time.Now(),
+		short,
 	)
-	return nil, err
+	return err
 }
 
 func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, error) {

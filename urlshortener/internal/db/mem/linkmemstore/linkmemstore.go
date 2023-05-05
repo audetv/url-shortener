@@ -56,13 +56,13 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 	return nil, sql.ErrNoRows
 }
 
-func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
+func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error {
 	ls.Lock()
 	defer ls.Unlock()
 
 	select {
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return ctx.Err()
 	default:
 
 	}
@@ -71,10 +71,10 @@ func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) 
 	if ok {
 		l.RedirectCount += 1
 		ls.m[short] = l
-		return &l, nil
+		return nil
 	}
 
-	return nil, sql.ErrNoRows
+	return sql.ErrNoRows
 }
 
 func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, error) {

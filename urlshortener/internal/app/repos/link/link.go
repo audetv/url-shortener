@@ -25,7 +25,7 @@ type LinkStoreInterface interface {
 	Create(ctx context.Context, link Link) (*shorturl.ShortUrl, error)
 	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
 	SearchLinks(ctx context.Context, short string) (chan Link, error)
-	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
+	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
 
 }
@@ -59,10 +59,16 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*Link, erro
 }
 
 func (ls *Links) DoRedirect(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {
-	link, err := ls.linkStore.IncRedirectCount(ctx, short)
+	var link, err = ls.linkStore.Read(ctx, short)
 	if err != nil {
-		return nil, fmt.Errorf("read link error %w", err)
+		return nil, fmt.Errorf("ошибка при чтении ссылки %w", err)
 	}
+
+	err = ls.linkStore.IncRedirectCount(ctx, short)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка при увелечении счетчика переходов по ссылке %w", err)
+	}
+
 	return link, err
 }
 
