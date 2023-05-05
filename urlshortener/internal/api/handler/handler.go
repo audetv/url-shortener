@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/audetv/url-shortener/urlshortener/internal/api/vlidator"
 	"log"
 	"net/http"
 
@@ -44,6 +45,11 @@ type Link struct {
 	RedirectCount int               `json:"redirect_count"`
 }
 
+type Message struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
+}
+
 func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -65,6 +71,15 @@ func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO Сделать проверку, что урл валидный
+	err := vlidator.ValidLink(l.Origin)
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		_ = json.NewEncoder(w).Encode(Message{
+			Message: err.Error(),
+			Code:    http.StatusUnprocessableEntity,
+		})
+		return
+	}
 
 	ln := link.Link{
 		Origin: l.Origin,
@@ -102,7 +117,7 @@ func (rt *Router) Redirect(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// SearchLinks /search?q='' список всех ссылок, или фильтр ссылок по origin url
+// SearchLinks /search?q=” список всех ссылок, или фильтр ссылок по origin url
 func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
