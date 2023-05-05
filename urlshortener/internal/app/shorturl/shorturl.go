@@ -8,8 +8,9 @@ const letterBytes = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 type ShortUrl string
 
-func New() *ShortUrl {
-	shortUrlLen := 7
+// New создает строку из набора символов letterBytes с заданной длиной len
+func New(len int) *ShortUrl {
+	shortUrlLen := len
 	shortUrl := randStringBytes(shortUrlLen)
 	return (*ShortUrl)(&shortUrl)
 }

@@ -42,7 +42,7 @@ func NewLinks(linkStore LinkStoreInterface) *Links {
 }
 
 func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
-	l.Short = *shorturl.New()
+	l.Short = *shorturl.New(8)
 	short, err := ls.linkStore.Create(ctx, l)
 	if err != nil {
 		return nil, fmt.Errorf("create link error: %w", err)
