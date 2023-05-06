@@ -3,10 +3,9 @@ version: "3.9"
 services:
 
   postgres:
-    image: postgres:15.1-alpine
+    image: ${REGISTRY}/postgres:${IMAGE_TAG}
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
