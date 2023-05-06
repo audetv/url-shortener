@@ -33,10 +33,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      args:
-        - POSTGRES_USER
-        - POSTGRES_PASSWORD_FILE
-        - POSTGRES_DB
     restart: always
     ports:
       - "8000:8000"

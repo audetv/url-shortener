@@ -24,3 +24,15 @@ push-build-cache:
 
 push:
 	docker push ${REGISTRY}/url-shortener:${IMAGE_TAG}
+
+deploy:
+	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'docker network create --driver=overlay traefik-public || true'
+	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'rm -rf url_shortener_${BUILD_NUMBER} && mkdir url_shortener_${BUILD_NUMBER}'
+
+	envsubst < docker-compose-production.yml > docker-compose-production-env.yml
+	scp -o StrictHostKeyChecking=no -P ${PORT} docker-compose-production-env.yml deploy@${HOST}:site_${BUILD_NUMBER}/docker-compose.yml
+	rm -f docker-compose-production-env.yml
+
+	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'mkdir url_shortener_${BUILD_NUMBER}/secrets'
+	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'cp .secrets_url_shortener/* url_shortener_${BUILD_NUMBER}/secrets'
+	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'cd url_shortener_${BUILD_NUMBER} && docker stack deploy --compose-file docker-compose.yml url-shortener --with-registry-auth --prune'
