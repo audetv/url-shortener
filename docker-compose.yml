@@ -12,13 +12,16 @@ services:
       - url-shortener-net
 
   postgres:
-    image: postgres:15.1-alpine
+    image: localhost:5000/postgres:latest
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     restart: always
     ports:
       - "54325:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
+#      - ./sql:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
