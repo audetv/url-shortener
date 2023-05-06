@@ -21,9 +21,9 @@ func NewRouter(links *link.Links) *Router {
 		ServeMux: http.NewServeMux(),
 		links:    links,
 	}
-	r.HandleFunc("/create", r.AuthMiddleware(http.HandlerFunc(r.CreateLink)).ServeHTTP)
+	r.HandleFunc("/create", http.HandlerFunc(r.CreateLink).ServeHTTP)
 	r.HandleFunc("/redirect", http.HandlerFunc(r.Redirect).ServeHTTP)
-	r.HandleFunc("/search", r.AuthMiddleware(http.HandlerFunc(r.SearchLinks)).ServeHTTP)
+	r.HandleFunc("/search", http.HandlerFunc(r.SearchLinks).ServeHTTP)
 	return r
 }
 
