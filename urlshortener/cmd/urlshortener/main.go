@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/audetv/url-shortener/urlshortener/internal/app/secret"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/db/mem/linkmemstore"
 
@@ -38,11 +42,16 @@ func main() {
 	var lst link.LinkStoreInterface
 	stl := os.Getenv("URL_SHORTENER_STORE")
 
+	username := os.Getenv("POSTGRES_USER")
+	passwordBytes := secret.Read(os.Getenv("POSTGRES_PASSWORD_FILE"))
+	password := strings.TrimRight(string(passwordBytes), "\r\n")
+	database := os.Getenv("POSTGRES_DB")
+
 	switch stl {
 	case "mem":
 		lst = linkmemstore.NewLinks()
 	case "pg":
-		dsn := os.Getenv("PG_DSN")
+		dsn := fmt.Sprintf("postgresql://%v:%v@postgres/%v?sslmode=disable", username, password, database)
 		pgst, err := pgstore.NewLinks(dsn)
 		if err != nil {
 			log.Fatal(err)
