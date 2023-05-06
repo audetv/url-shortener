@@ -54,3 +54,21 @@ jobs:
     - name: Push
       run: make push
       if: ${{ github.ref == 'refs/heads/main' }}
+
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.PRODUCTION_KEY }}
+        known_hosts: ${{ secrets.PRODUCTION_HOST }}
+      if: ${{ github.ref == 'refs/heads/main' }}
+
+    - name: Deploy
+      run: make deploy
+      env:
+        BUILD_NUMBER: ${GITHUB_RUN_NUMBER}
+        HOST: ${{ secrets.PRODUCTION_HOST }}
+        PORT: ${{ secrets.PRODUCTION_PORT }}
+        POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+        POSTGRES_PASSWORD_FILE: ${{ secrets.APP_DB_PASSWORD_FILE }}
+      if: ${{ github.ref == 'refs/heads/main' }}

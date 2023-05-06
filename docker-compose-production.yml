@@ -25,9 +25,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      POSTGRES_USER: ${USH_POSTGRES_USER}
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB: ${USH_POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB}
       URL_SHORTENER_STORE: pg
     secrets:
       - postgres_password
@@ -45,7 +45,7 @@ services:
 
 secrets:
   postgres_password:
-    file: ${USH_DB_PASSWORD_FILE}
+    file: ${POSTGRES_PASSWORD_FILE}
 
 volumes:
   postgres:
