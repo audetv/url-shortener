@@ -3,7 +3,7 @@ version: "3.9"
 services:
 
   postgres:
-    image: ${REGISTRY}/postgres:${IMAGE_TAG}
+    image: ${REGISTRY}/url-shortener-postgres:${IMAGE_TAG}
     volumes:
       - postgres:/var/lib/postgresql/data
     environment:
