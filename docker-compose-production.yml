@@ -2,64 +2,55 @@ version: "3.9"
 
 services:
 
-  registry:
-    image: registry:2
-    container_name: registry
-    ports:
-      - "5000:5000"
-    restart: always
-    networks:
-      - url-shortener-net
-
   postgres:
     image: postgres:15.1-alpine
-    restart: always
-    ports:
-      - "54325:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./sql:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_USER: app
+      POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB: short_links
+      POSTGRES_DB: ${POSTGRES_DB}
     secrets:
       - postgres_password
     networks:
       - url-shortener-net
+    deploy:
+      placement:
+        constraints: [ node.labels.frontend == frontend ]
+      endpoint_mode: dnsrr
 
   url-shortener:
-    image: localhost:5000/url-shortener:latest
-    build:
-      context: ./
-      dockerfile: Dockerfile
-      args:
-        - POSTGRES_USER
-        - POSTGRES_PASSWORD_FILE
-        - POSTGRES_DB
-    restart: always
+    image: ${REGISTRY}/url-shortener:${IMAGE_TAG}
     ports:
       - "8000:8000"
     environment:
-      POSTGRES_USER: app
+      POSTGRES_USER: ${USH_POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      POSTGRES_DB: short_links
+      POSTGRES_DB: ${USH_POSTGRES_DB}
       URL_SHORTENER_STORE: pg
     secrets:
       - postgres_password
-    depends_on:
-      - registry
-      - postgres
     networks:
       - url-shortener-net
+      - traefik-public
+    deploy:
+      placement:
+        constraints: [ node.labels.frontend == frontend ]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
 
 secrets:
   postgres_password:
-    file: ./docker/development/secrets/postgres_password
-
+    file: ${USH_DB_PASSWORD_FILE}
 
 volumes:
   postgres:
 
 networks:
+  traefik-public:
+    external: true
   url-shortener-net:
