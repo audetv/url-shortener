@@ -21,8 +21,6 @@ services:
 
   url-shortener:
     image: ${REGISTRY}/url-shortener:${IMAGE_TAG}
-    ports:
-      - "8000:8000"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
@@ -36,6 +34,14 @@ services:
     deploy:
       placement:
         constraints: [ node.labels.frontend == frontend ]
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik-public
+        - traefik.http.routers.url-shortener.rule=Host(`svodd.ru`) && PathPrefix(`/api/url-shortener`)
+        - traefik.http.routers.url-shortener.entryPoints=http
+        - traefik.http.middlewares.api-url-shortener.stripprefix.prefixes=/api/url-shortener
+        - traefik.http.services.url-shortener.loadBalancer.server.port=8000
+        - traefik.http.routers.url-shortener.middlewares=api-url-shortener
       restart_policy:
         condition: on-failure
         delay: 5s
