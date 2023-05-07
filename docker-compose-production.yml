@@ -36,12 +36,12 @@ services:
         constraints: [ node.labels.frontend == frontend ]
       labels:
         - traefik.enable=true
-          - traefik.docker.network=traefik-public
-          - traefik.http.routers.url-shortener.rule=Host(`url.svodd.ru`)
-          - traefik.http.services.url-shortener.loadBalancer.server.port=8000
-          - traefik.http.routers.url-shortener.entryPoints=https
-          - traefik.http.routers.url-shortener.tls=true
-          - traefik.http.routers.url-shortener.tls.certResolver=letsEncrypt
+        - traefik.docker.network=traefik-public
+        - traefik.http.routers.url-shortener.rule=Host(`url.svodd.ru`)
+        - traefik.http.services.url-shortener.loadBalancer.server.port=8000
+        - traefik.http.routers.url-shortener.entryPoints=https
+        - traefik.http.routers.url-shortener.tls=true
+        - traefik.http.routers.url-shortener.tls.certResolver=letsEncrypt
       restart_policy:
         condition: on-failure
         delay: 5s
