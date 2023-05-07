@@ -24,6 +24,7 @@ func NewRouter(links *link.Links) *Router {
 	r.HandleFunc("/create", http.HandlerFunc(r.CreateLink).ServeHTTP)
 	r.HandleFunc("/redirect", http.HandlerFunc(r.Redirect).ServeHTTP)
 	r.HandleFunc("/search", http.HandlerFunc(r.SearchLinks).ServeHTTP)
+	r.HandleFunc("/short", http.HandlerFunc(r.SearchShort).ServeHTTP)
 	return r
 }
 
@@ -166,4 +167,35 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 			w.(http.Flusher).Flush()
 		}
 	}
+}
+
+// SearchShort ищет ссылку по коду, возвращает json ссылку или 404 если не найдено.
+func (rt *Router) SearchShort(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	s := r.URL.Query().Get("q")
+
+	short := shorturl.Parse(s)
+
+	l, err := rt.links.Read(r.Context(), *short)
+	log.Printf("link %v", l)
+	if err != nil || l.Short == "" {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	enc := json.NewEncoder(w)
+	fmt.Fprintf(w, "[")
+	defer fmt.Fprintf(w, "]\r\n")
+	_ = enc.Encode(
+		Link{
+			Short:         l.Short,
+			Origin:        l.Origin,
+			RedirectCount: l.RedirectCount,
+		},
+	)
+	w.(http.Flusher).Flush()
 }

@@ -55,11 +55,12 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public
-      - traefik.http.routers.url-shortener.rule=Host(`localhost`) && PathPrefix(`/api/url-shortener`)
+        #- traefik.http.routers.url-shortener.rule=Host(`localhost`) && PathPrefix(`/api/url-shortener`)
+      - traefik.http.routers.url-shortener.rule=Host(`url.localhost`)
       - traefik.http.routers.url-shortener.entryPoints=http
-      - traefik.http.middlewares.api-url-shortener.stripprefix.prefixes=/api/url-shortener
+        #- traefik.http.middlewares.api-url-shortener.stripprefix.prefixes=/api/url-shortener
       - traefik.http.services.url-shortener.loadBalancer.server.port=8000
-      - traefik.http.routers.url-shortener.middlewares=api-url-shortener
+        #- traefik.http.routers.url-shortener.middlewares=api-url-shortener
 
 secrets:
   postgres_password:
