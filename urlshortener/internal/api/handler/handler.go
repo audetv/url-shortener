@@ -92,6 +92,7 @@ func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(Link{
 		Short:  newLink.Short,
@@ -140,6 +141,7 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enc := json.NewEncoder(w)
+	w.Header().Set("Content-Type", "application/json")
 	first := true
 	fmt.Fprintf(w, "[")
 	defer fmt.Fprintf(w, "]\r\n")
@@ -188,6 +190,7 @@ func (rt *Router) SearchShort(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enc := json.NewEncoder(w)
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "[")
 	defer fmt.Fprintf(w, "]\r\n")
 	_ = enc.Encode(
