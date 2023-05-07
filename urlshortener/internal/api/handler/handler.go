@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/api/vlidator"
 	"github.com/audetv/url-shortener/urlshortener/internal/app/repos/link"
@@ -44,6 +45,7 @@ type Link struct {
 	Short         shorturl.ShortUrl `json:"short"`
 	Origin        string            `json:"origin"`
 	RedirectCount int               `json:"redirect_count"`
+	CreatedAt     time.Time         `json:"created_at,omitempty"`
 }
 
 type Message struct {
@@ -94,10 +96,13 @@ func (rt *Router) CreateLink(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(Link{
-		Short:  newLink.Short,
-		Origin: newLink.Origin,
-	})
+	_ = json.NewEncoder(w).Encode(
+		Link{
+			Short:     newLink.Short,
+			Origin:    newLink.Origin,
+			CreatedAt: newLink.CreatedAt,
+		},
+	)
 }
 
 func (rt *Router) Redirect(w http.ResponseWriter, r *http.Request) {
@@ -164,6 +169,7 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 					Short:         l.Short,
 					Origin:        l.Origin,
 					RedirectCount: l.RedirectCount,
+					CreatedAt:     l.CreatedAt,
 				},
 			)
 			w.(http.Flusher).Flush()
@@ -198,6 +204,7 @@ func (rt *Router) SearchShort(w http.ResponseWriter, r *http.Request) {
 			Short:         l.Short,
 			Origin:        l.Origin,
 			RedirectCount: l.RedirectCount,
+			CreatedAt:     l.CreatedAt,
 		},
 	)
 	w.(http.Flusher).Flush()

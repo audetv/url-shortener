@@ -24,7 +24,7 @@ func NewLinks() *Links {
 	}
 }
 
-func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, error) {
+func (ls *Links) Create(ctx context.Context, l link.Link) (*link.Link, error) {
 	ls.Lock()
 	defer ls.Unlock()
 
@@ -35,7 +35,7 @@ func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, e
 	}
 
 	ls.m[l.Short] = l
-	return &l.Short, nil
+	return &l, nil
 }
 
 func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
