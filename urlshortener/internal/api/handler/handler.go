@@ -140,8 +140,8 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 
 	enc := json.NewEncoder(w)
 	first := true
-	fmt.Printf("[")
-	defer fmt.Printf("]\r\n")
+	fmt.Fprintf(w, "[")
+	defer fmt.Fprintf(w, "]\r\n")
 
 	for {
 		select {
