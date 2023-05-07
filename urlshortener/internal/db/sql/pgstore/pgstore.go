@@ -47,7 +47,7 @@ func (ls *Links) Close() {
 	ls.db.Close()
 }
 
-func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, error) {
+func (ls *Links) Create(ctx context.Context, l link.Link) (*link.Link, error) {
 	dbl := &DBPgLink{
 		Short:         string(l.Short),
 		Url:           l.Origin,
@@ -70,7 +70,8 @@ func (ls *Links) Create(ctx context.Context, l link.Link) (*shorturl.ShortUrl, e
 		return nil, err
 	}
 
-	return &l.Short, nil
+	l.CreatedAt = dbl.CreatedAt
+	return &l, nil
 }
 
 func (ls *Links) Delete(ctx context.Context, short shorturl.ShortUrl) error {
@@ -105,6 +106,7 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 		Short:         *shorturl.Parse(dbl.Short),
 		Origin:        dbl.Url,
 		RedirectCount: dbl.RedirectCount,
+		CreatedAt:     dbl.CreatedAt,
 	}, nil
 }
 
@@ -151,6 +153,7 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, err
 				Short:         *shorturl.Parse(dbl.Short),
 				Origin:        dbl.Url,
 				RedirectCount: dbl.RedirectCount,
+				CreatedAt:     dbl.CreatedAt,
 			}
 		}
 	}()

@@ -12,6 +12,7 @@ type Link struct {
 	Short         shorturl.ShortUrl
 	Origin        string
 	RedirectCount int
+	CreatedAt     time.Time
 }
 
 type Stats struct {
@@ -22,7 +23,7 @@ type Stats struct {
 }
 
 type LinkStoreInterface interface {
-	Create(ctx context.Context, link Link) (*shorturl.ShortUrl, error)
+	Create(ctx context.Context, link Link) (*Link, error)
 	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
 	SearchLinks(ctx context.Context, short string) (chan Link, error)
 	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error
@@ -42,11 +43,14 @@ func NewLinks(linkStore LinkStoreInterface) *Links {
 
 func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	l.Short = *shorturl.New(8)
-	short, err := ls.linkStore.Create(ctx, l)
+
+	newLink, err := ls.linkStore.Create(ctx, l)
 	if err != nil {
 		return nil, fmt.Errorf("create link error: %w", err)
 	}
-	l.Short = *short
+
+	l.Short = newLink.Short
+	l.CreatedAt = newLink.CreatedAt
 	return &l, nil
 }
 
