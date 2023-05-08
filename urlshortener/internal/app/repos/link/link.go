@@ -26,7 +26,8 @@ type Stats struct {
 type LinkStoreInterface interface {
 	Create(ctx context.Context, link Link) (*Link, error)
 	Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error)
-	SearchLinks(ctx context.Context, short string) (chan Link, error)
+	ReadByOrigin(ctx context.Context, link Link) (*Link, error)
+	SearchLinks(ctx context.Context, s string) (chan Link, error)
 	IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error
 	// Delete(ctx context.Context, su shorturl.ShortUrl) error
 
@@ -47,6 +48,12 @@ func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 
 	l = decodeLink(l)
 
+	// Еси ссылка уже существует, найдена по origin, то возвращаем найденную ссылку
+	existLink, err := ls.checkExistsLink(ctx, l)
+	if err == nil {
+		return existLink, nil
+	}
+
 	newLink, err := ls.linkStore.Create(ctx, l)
 	if err != nil {
 		return nil, fmt.Errorf("create link error: %w", err)
@@ -55,6 +62,17 @@ func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	l.Short = newLink.Short
 	l.CreatedAt = newLink.CreatedAt
 	return &l, nil
+}
+
+func (ls *Links) checkExistsLink(ctx context.Context, l Link) (*Link, error) {
+	result, err := ls.linkStore.ReadByOrigin(ctx, l)
+	if err != nil {
+		return nil, fmt.Errorf("read link error %w", err)
+	}
+	if result.Short == "" {
+		return nil, fmt.Errorf("not found")
+	}
+	return result, nil
 }
 
 func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*Link, error) {

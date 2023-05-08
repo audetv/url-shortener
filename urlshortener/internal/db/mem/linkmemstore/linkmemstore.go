@@ -56,6 +56,25 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 	return nil, sql.ErrNoRows
 }
 
+// ReadByOrigin эта функция не работает, TODO реализовать поиск по origin
+func (ls *Links) ReadByOrigin(ctx context.Context, l link.Link) (*link.Link, error) {
+	ls.Lock()
+	defer ls.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+
+	}
+	l, ok := ls.m[l.Short]
+	if ok {
+		return &l, nil
+	}
+
+	return nil, sql.ErrNoRows
+}
+
 func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error {
 	ls.Lock()
 	defer ls.Unlock()

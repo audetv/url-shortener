@@ -110,6 +110,36 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 	}, nil
 }
 
+// ReadByOrigin ищет ссылку в БД по совпадению url
+func (ls *Links) ReadByOrigin(ctx context.Context, l link.Link) (*link.Link, error) {
+	dbl := &DBPgLink{}
+	rows, err := ls.db.QueryContext(ctx, `SELECT short, url, redirect_count, created_at, updated_at, deleted_at
+	FROM links WHERE url = $1`, l.Origin)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err := rows.Scan(
+			&dbl.Short,
+			&dbl.Url,
+			&dbl.RedirectCount,
+			&dbl.CreatedAt,
+			&dbl.UpdatedAt,
+			&dbl.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	return &link.Link{
+		Short:         *shorturl.Parse(dbl.Short),
+		Origin:        dbl.Url,
+		RedirectCount: dbl.RedirectCount,
+		CreatedAt:     dbl.CreatedAt,
+	}, nil
+}
+
 func (ls *Links) IncRedirectCount(ctx context.Context, short shorturl.ShortUrl) error {
 	_, err := ls.db.ExecContext(
 		ctx,

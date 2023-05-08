@@ -7,3 +7,5 @@ CREATE TABLE public.links (
 	deleted_at timestamptz NULL,
     CONSTRAINT links_pk PRIMARY KEY (short)
 );
+
+CREATE INDEX links_url_idx ON public.links (url);
