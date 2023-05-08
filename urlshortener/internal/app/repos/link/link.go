@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/app/shorturl"
@@ -43,6 +44,8 @@ func NewLinks(linkStore LinkStoreInterface) *Links {
 
 func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	l.Short = *shorturl.New(8)
+
+	l = decodeLink(l)
 
 	newLink, err := ls.linkStore.Create(ctx, l)
 	if err != nil {
@@ -97,5 +100,17 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
 			}
 		}
 	}()
-	return chout, err
+	return chout, nil
+}
+
+// decodeLink декодирует оригинальную ссылку, если произошла ошибка возвращает не изменённую ссылку
+// это нужно, чтобы был возможен текстовый поиск по ссылке
+func decodeLink(link Link) Link {
+	decodedValue, err := url.QueryUnescape(link.Origin)
+	if err != nil {
+		decodedValue = link.Origin
+	}
+
+	link.Origin = decodedValue
+	return link
 }
