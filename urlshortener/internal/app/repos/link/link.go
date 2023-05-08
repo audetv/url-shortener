@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/audetv/url-shortener/urlshortener/internal/app/shorturl"
@@ -46,7 +47,7 @@ func NewLinks(linkStore LinkStoreInterface) *Links {
 func (ls *Links) CreateLink(ctx context.Context, l Link) (*Link, error) {
 	l.Short = *shorturl.New(8)
 
-	l = decodeLink(l)
+	l = processLink(l)
 
 	// Еси ссылка уже существует, найдена по origin, то возвращаем найденную ссылку
 	existLink, err := ls.checkExistsLink(ctx, l)
@@ -98,6 +99,8 @@ func (ls *Links) DoRedirect(ctx context.Context, short shorturl.ShortUrl) (*Link
 }
 
 func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
+	// приводим поисковый запрос в нижней регистр перед запросом в БД
+	s = strings.ToLower(s)
 	chin, err := ls.linkStore.SearchLinks(ctx, s)
 	if err != nil {
 		return nil, err
@@ -119,6 +122,15 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
 		}
 	}()
 	return chout, nil
+}
+
+// processLink подготавливает ссылку перед сохранением в БД
+// приводит к нижнему регистру и декодирует
+func processLink(l Link) Link {
+	l.Origin = strings.ToLower(l.Origin)
+	l = decodeLink(l)
+
+	return l
 }
 
 // decodeLink декодирует оригинальную ссылку, если произошла ошибка возвращает не изменённую ссылку
