@@ -18,6 +18,7 @@ FROM scratch
 
 WORKDIR /app
 
+COPY --from=builder /app/urlshortener/static /app/static
 COPY --from=builder /app/url-shortener /app/url-shortener
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
