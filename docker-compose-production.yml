@@ -16,7 +16,7 @@ services:
       - url-shortener-net
     deploy:
       placement:
-        constraints: [ node.labels.frontend == frontend ]
+        constraints: [ node.role == manager ]
       endpoint_mode: dnsrr
 
   url-shortener:
@@ -33,7 +33,7 @@ services:
       - traefik-public
     deploy:
       placement:
-        constraints: [ node.labels.frontend == frontend ]
+        constraints: [ node.role == manager ]
       labels:
         - traefik.enable=true
         - traefik.docker.network=traefik-public
