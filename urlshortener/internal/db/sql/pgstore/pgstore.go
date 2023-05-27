@@ -17,6 +17,7 @@ var _ link.LinkStoreInterface = &Links{}
 type DBPgLink struct {
 	Short         string     `db:"short"`
 	Url           string     `db:"url"`
+	Search        string     `db:"search"`
 	RedirectCount int        `db:"redirect_cont"`
 	CreatedAt     time.Time  `db:"created_at"`
 	UpdatedAt     time.Time  `db:"updated_at"`
@@ -51,16 +52,18 @@ func (ls *Links) Create(ctx context.Context, l link.Link) (*link.Link, error) {
 	dbl := &DBPgLink{
 		Short:         string(l.Short),
 		Url:           l.Origin,
+		Search:        l.Search,
 		RedirectCount: l.RedirectCount,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
 
 	_, err := ls.db.ExecContext(ctx, `INSERT INTO links
-    (short, url, redirect_count, created_at, updated_at, deleted_at)
-    values ($1, $2, $3, $4, $5, $6)`,
+    (short, url, search, redirect_count, created_at, updated_at, deleted_at)
+    values ($1, $2, $3, $4, $5, $6, $7)`,
 		dbl.Short,
 		dbl.Url,
+		dbl.Search,
 		dbl.RedirectCount,
 		dbl.CreatedAt,
 		dbl.UpdatedAt,
@@ -83,7 +86,7 @@ func (ls *Links) Delete(ctx context.Context, short shorturl.ShortUrl) error {
 
 func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link, error) {
 	dbl := &DBPgLink{}
-	rows, err := ls.db.QueryContext(ctx, `SELECT short, url, redirect_count, created_at, updated_at, deleted_at
+	rows, err := ls.db.QueryContext(ctx, `SELECT short, url, search, redirect_count, created_at, updated_at, deleted_at
 	FROM links WHERE short = $1`, short)
 	if err != nil {
 		return nil, err
@@ -93,6 +96,7 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 		if err := rows.Scan(
 			&dbl.Short,
 			&dbl.Url,
+			&dbl.Search,
 			&dbl.RedirectCount,
 			&dbl.CreatedAt,
 			&dbl.UpdatedAt,
@@ -105,6 +109,7 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 	return &link.Link{
 		Short:         *shorturl.Parse(dbl.Short),
 		Origin:        dbl.Url,
+		Search:        dbl.Search,
 		RedirectCount: dbl.RedirectCount,
 		CreatedAt:     dbl.CreatedAt,
 	}, nil
@@ -113,7 +118,7 @@ func (ls *Links) Read(ctx context.Context, short shorturl.ShortUrl) (*link.Link,
 // ReadByOrigin ищет ссылку в БД по совпадению url
 func (ls *Links) ReadByOrigin(ctx context.Context, l link.Link) (*link.Link, error) {
 	dbl := &DBPgLink{}
-	rows, err := ls.db.QueryContext(ctx, `SELECT short, url, redirect_count, created_at, updated_at, deleted_at
+	rows, err := ls.db.QueryContext(ctx, `SELECT short, url, search, redirect_count, created_at, updated_at, deleted_at
 	FROM links WHERE url = $1`, l.Origin)
 	if err != nil {
 		return nil, err
@@ -123,6 +128,7 @@ func (ls *Links) ReadByOrigin(ctx context.Context, l link.Link) (*link.Link, err
 		if err := rows.Scan(
 			&dbl.Short,
 			&dbl.Url,
+			&dbl.Search,
 			&dbl.RedirectCount,
 			&dbl.CreatedAt,
 			&dbl.UpdatedAt,
@@ -135,6 +141,7 @@ func (ls *Links) ReadByOrigin(ctx context.Context, l link.Link) (*link.Link, err
 	return &link.Link{
 		Short:         *shorturl.Parse(dbl.Short),
 		Origin:        dbl.Url,
+		Search:        dbl.Search,
 		RedirectCount: dbl.RedirectCount,
 		CreatedAt:     dbl.CreatedAt,
 	}, nil
@@ -158,8 +165,8 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, err
 		dbl := &DBPgLink{}
 
 		rows, err := ls.db.QueryContext(ctx, `
-		SELECT short, url, redirect_count, created_at, updated_at, deleted_at 
-		FROM links WHERE url LIKE $1  ORDER BY redirect_count DESC`, "%"+s+"%")
+		SELECT short, url, search, redirect_count, created_at, updated_at, deleted_at 
+		FROM links WHERE search LIKE $1  ORDER BY redirect_count DESC`, "%"+s+"%")
 		if err != nil {
 			log.Println(err)
 			return
@@ -170,6 +177,7 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, err
 			if err := rows.Scan(
 				&dbl.Short,
 				&dbl.Url,
+				&dbl.Search,
 				&dbl.RedirectCount,
 				&dbl.CreatedAt,
 				&dbl.UpdatedAt,
@@ -182,6 +190,7 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, err
 			chout <- link.Link{
 				Short:         *shorturl.Parse(dbl.Short),
 				Origin:        dbl.Url,
+				Search:        dbl.Search,
 				RedirectCount: dbl.RedirectCount,
 				CreatedAt:     dbl.CreatedAt,
 			}

@@ -44,6 +44,7 @@ func (rt *Router) AuthMiddleware(next http.Handler) http.Handler {
 
 type Link struct {
 	Short         shorturl.ShortUrl `json:"short"`
+	Search        string            `json:"search"`
 	Origin        string            `json:"origin"`
 	RedirectCount int               `json:"redirect_count"`
 	CreatedAt     time.Time         `json:"created_at,omitempty"`
@@ -168,6 +169,7 @@ func (rt *Router) SearchLinks(w http.ResponseWriter, r *http.Request) {
 			_ = enc.Encode(
 				Link{
 					Short:         l.Short,
+					Search:        l.Search,
 					Origin:        l.Origin,
 					RedirectCount: l.RedirectCount,
 					CreatedAt:     l.CreatedAt,
@@ -203,6 +205,7 @@ func (rt *Router) SearchShort(w http.ResponseWriter, r *http.Request) {
 	_ = enc.Encode(
 		Link{
 			Short:         l.Short,
+			Search:        l.Search,
 			Origin:        l.Origin,
 			RedirectCount: l.RedirectCount,
 			CreatedAt:     l.CreatedAt,
