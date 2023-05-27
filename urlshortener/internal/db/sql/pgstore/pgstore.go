@@ -159,7 +159,7 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan link.Link, err
 
 		rows, err := ls.db.QueryContext(ctx, `
 		SELECT short, url, redirect_count, created_at, updated_at, deleted_at 
-		FROM links WHERE url LIKE $1`, "%"+s+"%")
+		FROM links WHERE url LIKE $1  ORDER BY redirect_count DESC`, "%"+s+"%")
 		if err != nil {
 			log.Println(err)
 			return
