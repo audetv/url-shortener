@@ -127,8 +127,9 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
 // processLink подготавливает ссылку перед сохранением в БД
 // приводит к нижнему регистру и декодирует
 func processLink(l Link) Link {
-	l.Origin = strings.ToLower(l.Origin)
+	// Декодирование ссылки надо делать перед тем как применить strings.ToLower
 	l = decodeLink(l)
+	l.Origin = strings.ToLower(l.Origin)
 
 	return l
 }
