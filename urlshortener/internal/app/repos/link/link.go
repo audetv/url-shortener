@@ -3,6 +3,7 @@ package link
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 type Link struct {
 	Short         shorturl.ShortUrl
+	Search        string
 	Origin        string
 	RedirectCount int
 	CreatedAt     time.Time
@@ -125,11 +127,27 @@ func (ls *Links) SearchLinks(ctx context.Context, s string) (chan Link, error) {
 }
 
 // processLink подготавливает ссылку перед сохранением в БД
-// приводит к нижнему регистру и декодирует
+// декодирует и парсит UrlQuery, разбирает часть запроса "search[query]" и приводит к нижнему регистру
 func processLink(l Link) Link {
 	// Декодирование ссылки надо делать перед тем как применить strings.ToLower
 	l = decodeLink(l)
-	l.Origin = strings.ToLower(l.Origin)
+	u, err := url.Parse(l.Origin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+
+	var result string
+	for n, search := range q["search[query]"] {
+		if n == 0 {
+			result = fmt.Sprintf("%v", strings.TrimSpace(search))
+		} else {
+			result = fmt.Sprintf("%v, %v", result, strings.TrimSpace(search))
+		}
+	}
+
+	fmt.Println(result)
+	l.Search = strings.ToLower(result)
 
 	return l
 }
