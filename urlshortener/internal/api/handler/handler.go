@@ -22,6 +22,7 @@ func NewRouter(links *link.Links) *Router {
 		ServeMux: http.NewServeMux(),
 		links:    links,
 	}
+	r.HandleFunc("/health", http.HandlerFunc(r.Healthcheck).ServeHTTP)
 	r.HandleFunc("/favicon.ico", http.HandlerFunc(r.faviconHandler).ServeHTTP)
 	r.HandleFunc("/create", http.HandlerFunc(r.CreateLink).ServeHTTP)
 	r.HandleFunc("/redirect", http.HandlerFunc(r.Redirect).ServeHTTP)
@@ -216,4 +217,11 @@ func (rt *Router) SearchShort(w http.ResponseWriter, r *http.Request) {
 
 func (rt *Router) faviconHandler(writer http.ResponseWriter, request *http.Request) {
 	http.ServeFile(writer, request, "static/favicon.ico")
+}
+
+func (rt *Router) Healthcheck(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "Content-Type text/plain")
+	writer.WriteHeader(http.StatusOK)
+	fmt.Fprintf(writer, "alive")
+	writer.(http.Flusher).Flush()
 }
