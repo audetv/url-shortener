@@ -42,11 +42,6 @@ services:
         - traefik.http.routers.url-shortener.entryPoints=https
         - traefik.http.routers.url-shortener.tls=true
         - traefik.http.routers.url-shortener.tls.certResolver=letsEncrypt
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 5
-        window: 120s
 
 secrets:
   postgres_password:
