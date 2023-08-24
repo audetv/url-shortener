@@ -58,7 +58,7 @@ services:
     secrets:
       - postgres_password
       - backup_aws_secret_access_key
-    command: sh -c 'wait-for-it app-postgres:5432 -t 60 && backup'
+    command: sh -c 'wait-for-it postgres:5432 -t 60 && backup'
     deploy:
       labels:
         - swarm.cronjob.enable=true
