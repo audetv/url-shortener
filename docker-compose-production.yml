@@ -43,9 +43,38 @@ services:
         - traefik.http.routers.url-shortener.tls=true
         - traefik.http.routers.url-shortener.tls.certResolver=letsEncrypt
 
+  postgres-backup:
+    image: ${REGISTRY}/url-shortener-postgres-backup:${IMAGE_TAG}
+    environment:
+      BACKUP_NAME: url-shortener_postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/app_db_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      AWS_ACCESS_KEY_ID: ${BACKUP_AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backup_aws_secret_access_key
+      S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
+      S3_BUCKET: ${BACKUP_S3_BUCKET}
+    secrets:
+      - postgres_password
+      - backup_aws_secret_access_key
+    command: sh -c 'wait-for-it app-postgres:5432 -t 60 && backup'
+    deploy:
+      labels:
+        - swarm.cronjob.enable=true
+        - swarm.cronjob.schedule=6 */12 * * *
+        - swarm.cronjob.skip-running=true
+      placement:
+        constraints: [ node.labels.parser == parser ]
+      replicas: 0
+      restart_policy:
+        condition: none
+
 secrets:
   postgres_password:
     file: ${POSTGRES_PASSWORD_FILE}
+  backup_aws_secret_access_key:
+    file: ${BACKUP_AWS_ACCESS_KEY_FILE}
 
 volumes:
   postgres:

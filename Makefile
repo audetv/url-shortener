@@ -4,7 +4,7 @@ check:
 check-fix:
 	golangci-lint run --fix
 
-docker-build: build-url-shortener build-postgres
+docker-build: build-url-shortener build-postgres build-backup
 
 build-url-shortener:
 	DOCKER_BUILDKIT=1 docker --log-level=debug build --pull --build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -27,6 +27,9 @@ build-postgres:
         --tag ${REGISTRY}/url-shortener-postgres:${IMAGE_TAG} \
         --file docker/postgres/Dockerfile docker/postgres
 
+build-backup:
+	docker --log-level=debug build --pull --file=docker/common/postgres-backup/Dockerfile --tag=${REGISTRY}/url-shortener-postgres-backup:${IMAGE_TAG} docker/common
+
 push-build-cache:
 	docker push ${REGISTRY}/url-shortener:cache-builder
 	docker push ${REGISTRY}/url-shortener:cache
@@ -35,6 +38,7 @@ push-build-cache:
 push:
 	docker push ${REGISTRY}/url-shortener:${IMAGE_TAG}
 	docker push ${REGISTRY}/url-shortener-postgres:${IMAGE_TAG}
+	docker push ${REGISTRY}/url-shortener-postgres-backup:${IMAGE_TAG}
 
 deploy:
 	ssh -o StrictHostKeyChecking=no deploy@${HOST} -p ${PORT} 'docker network create --driver=overlay traefik-public || true'
