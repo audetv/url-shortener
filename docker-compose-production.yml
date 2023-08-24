@@ -53,6 +53,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       AWS_ACCESS_KEY_ID: ${BACKUP_AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backup_aws_secret_access_key
+      AWS_DEFAULT_REGION: ru-1
       S3_ENDPOINT: ${BACKUP_S3_ENDPOINT}
       S3_BUCKET: ${BACKUP_S3_BUCKET}
     secrets:
