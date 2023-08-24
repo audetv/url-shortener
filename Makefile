@@ -28,7 +28,7 @@ build-postgres:
         --file docker/postgres/Dockerfile docker/postgres
 
 build-backup:
-	docker --log-level=debug build --pull --file=docker/commmon/postgres-backup/Dockerfile --tag=${REGISTRY}/url-shortener-postgres-backup:${IMAGE_TAG} docker/common
+	docker --log-level=debug build --pull --file=docker/common/postgres-backup/Dockerfile --tag=${REGISTRY}/url-shortener-postgres-backup:${IMAGE_TAG} docker/common
 
 push-build-cache:
 	docker push ${REGISTRY}/url-shortener:cache-builder
