@@ -59,6 +59,8 @@ services:
       - postgres_password
       - backup_aws_secret_access_key
     command: sh -c 'wait-for-it postgres:5432 -t 60 && backup'
+    networks:
+      - url-shortener-net
     deploy:
       labels:
         - swarm.cronjob.enable=true
