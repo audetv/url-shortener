@@ -4,15 +4,15 @@ services:
 
   registry:
     image: registry:2
-    container_name: registry
+    container_name: url-shortener-registry
     ports:
-      - "5000:5000"
+      - "5001:5001"
     restart: always
     networks:
       - url-shortener-net
 
   postgres:
-    image: localhost:5000/postgres:latest
+    image: localhost:5001/postgres:latest
     build:
       context: ./docker/postgres
       dockerfile: Dockerfile
@@ -32,7 +32,7 @@ services:
       - url-shortener-net
 
   url-shortener:
-    image: localhost:5000/url-shortener:latest
+    image: localhost:5001/url-shortener:latest
     build:
       context: ./
       dockerfile: Dockerfile
@@ -62,12 +62,58 @@ services:
       - traefik.http.services.url-shortener.loadBalancer.server.port=8000
         #- traefik.http.routers.url-shortener.middlewares=api-url-shortener
 
+  postgres-backup:
+    build:
+      context: ./docker/common
+      dockerfile: postgres-backup/Dockerfile
+    environment:
+      BACKUP_NAME: url-shortener_postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: short_links
+      AWS_ACCESS_KEY_ID: storage_app
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/backup_aws_secret_access_key
+      AWS_DEFAULT_REGION: region
+      S3_ENDPOINT: http://backup-storage:9000
+      S3_BUCKET: backup
+    networks:
+      - url-shortener-net
+    secrets:
+      - postgres_password
+      - backup_aws_secret_access_key
+    command: sh -c 'wait-for-it postgres:5432 -t 20 && backup'
+
+  backup-storage:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: storage_app
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/backup_aws_secret_access_key
+    secrets:
+      - backup_aws_secret_access_key
+    volumes:
+      - backup-storage:/data
+    entrypoint: sh -c 'mkdir -p /data/backup && docker-entrypoint.sh minio server /data --console-address ":80"'
+    networks:
+      - traefik-public
+      - url-shortener-net
+      - default
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.backup-storage-url.rule=Host(`backup-storage-url.localhost`)
+      - traefik.http.routers.backup-storage-url.entryPoints=http
+      - traefik.http.services.backup-storage-url.loadBalancer.server.port=80
+
 secrets:
   postgres_password:
     file: ./docker/development/secrets/postgres_password
+  backup_aws_secret_access_key:
+    file: ./docker/development/secrets/backup_aws_secret_access_key
 
 volumes:
   postgres:
+  backup-storage:
 
 networks:
   traefik-public:
